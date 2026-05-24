@@ -30,7 +30,7 @@ __global__ void sumReduction(int *v, int *v_r) {
         // Change the indexing to be sequential threads
         int index = 2 * s threadIdx.x;
 
-        // Each thread does work unless the index goes off the blocl
+        // Each thread does work unless the index goes off the block
         if (index < blockDim.x) {
             partial_sum[index] += partial_sum[index + s];
         }
