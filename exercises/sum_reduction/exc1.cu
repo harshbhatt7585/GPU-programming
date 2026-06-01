@@ -15,6 +15,32 @@ using std::vector;
 #define SHEM_SIZE 256
 
 
+__global__ void sumReduction(int *v, int *v_r) {
+    // Allocate shared memory 
+    __shared__ int partial_sum[SHMEM_SIZE];
+
+    // Calculate elements into shared memory
+    partial_sum[threadIdx.x] = v[tid];
+    __syncthreads();
+
+    // Iterate of log base 2 the block dimension
+    for(int s=1; s < blockDim.x; s *= 2) {
+        // Reduce the threads performing woek by half previous the previous
+        // Iteration each cycle
+        if (threadIdx.x % (2 * s) == 0) {
+            partial_sum[threadIdx.x] += partial_sum[threadIdx.x + s];
+        }
+        __syncthreads();
+    }
+
+    // Let the thread 0 for this block write it's result to main memory
+    // Result is indexed by this block
+    if (threadIdx.x == 0) {
+        v_r[blockIdx.x] = partial_sum[0];
+    }
+}
+
+
 int main() {
     // Vector size
     int N = 1 << 16;
